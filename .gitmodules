@@ -1,6 +1,6 @@
 [submodule "MotionBERT"]
 	path = MotionBERT
-	url = ./MotionBERT
+	url = https://github.com/vuxminhan/MotionBERT.git
 [submodule "mmpose"]
 	path = mmpose
-	url = ./mmpose/
+	url = https://github.com/vuxminhan/mmpose.git
