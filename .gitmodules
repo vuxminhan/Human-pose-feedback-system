@@ -1,0 +1,6 @@
+[submodule "MotionBERT"]
+	path = MotionBERT
+	url = ./MotionBERT
+[submodule "mmpose"]
+	path = mmpose
+	url = ./mmpose/
