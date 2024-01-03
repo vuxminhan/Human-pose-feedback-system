@@ -1,204 +1,251 @@
 import argparse
-
-# Argument parser for command line execution
-parser = argparse.ArgumentParser(description='Execute combined_overlay_function with specified exercise.')
-parser.add_argument('--exercise', type=str, required=True, help='Name of the exercise to process.')
-
-args = parser.parse_args()
-
-
 import numpy as np
-import cv2
-import os
-import random
+import time
 from collections import defaultdict
-import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as R
 
-def calculate_angle(point1, point2, point3):
-    vector1 = np.array(point1) - np.array(point2)
-    vector3 = np.array(point3) - np.array(point2)
+class Preprocessing:
+    '''Preprocessing video...'''
 
-    dot_product = np.dot(vector1, vector3)
-    norm_product = np.linalg.norm(vector1) * np.linalg.norm(vector3)
+    def __init__(self, file_directory_trainer = '', file_directory_learner = ''):
+        '''Initialize the class with the file directory of the trainer and the learner.'''
 
-    cosine_angle = dot_product / norm_product
-    angle = np.arccos(cosine_angle)
-
-    return np.degrees(angle)
-
-# Dictionary of angle
-def name_angle_fun():
-    name_angle1 = {'right_elbow': 0, 'left_elbow': 1, 'right_shoulder': 2, 'left_shoulder': 3,
-              'right_knee': 4, 'left_knee': 5, 'right_hip':6, 'left_hip': 7, 'vertical': 8}
-    return name_angle1
-
-# Các điểm tính góc
-def angle_dict_fun():
-    angle_dict1 = {'right_elbow': [14,15,16], 'left_elbow': [11,12,13], 'right_shoulder': [8,14,15], 'left_shoulder': [8,11,12],
-              'right_knee': [1,2,3], 'left_knee': [4,5,6], 'right_hip':[0,1,2], 'left_hip': [0,4,5],  'vertical': [8,0,0]}
-    return angle_dict1
-
-"""EXTRACT VIDEO"""
-
-
-name_angle = name_angle_fun()
-angle_dict = angle_dict_fun()
-def extract_vid(array):
-    matrix = []
-    for i in range(array.shape[0]):  # calculate angle
-        theta = []
-        for key in angle_dict.keys():
-            if key != "vertical":
-                val = angle_dict[key]
-                a = array[i][val[0]]
-                b = array[i][val[1]]
-                c = array[i][val[2]]
-            else:
-                val = angle_dict[key]
-                a = array[i][val[0]]
-                b = array[i][val[1]]
-                c = [0,0,1]
-            angle = calculate_angle(a, b, c)
-            theta.append(angle)
-        matrix.append(theta)
-    return np.array(matrix)
-
-"""CALCULATE DISTANCE MATRIX"""
-
-
-
-#Input: 2 matrix are represented for 2 videos
-def distance_matrix(mat1, mat2):
-    N = mat1.shape[0]
-    M = mat2.shape[0]
-    dist_mat = np.zeros((N,M))
-    for i in range(N):
-        for j in range(M):
-            dist_mat[i, j] = np.linalg.norm(mat1[i, :] - mat2[j,:] )
-    return dist_mat
-
-"""DYNAMIC TIME WARPING ALGORITHM"""
-
-
-
-
-# Input: a distance matrix in which each element is distance of 2 vectors represented for 2 frames
-# Output: list contains pairs of frame indexes of 2 videos
-def dtw(dist_mat):
-    N, M = dist_mat.shape
-    cost_mat = np.zeros((N + 1, M + 1))
-    for i in range(1,N+1):
-        cost_mat[i, 0]  = np.inf
-    for j in range(1, M+1):
-        cost_mat[0, j] = np.inf
-    traceback_mat = np.zeros((N,M))
-    for i in range(N):
-        for j in range(M):
-            min_list = [cost_mat[i, j], # match = 0
-                        cost_mat[i, j+1],   #insert = 1
-                        cost_mat[i+1, j]]   # deletion = 2
-            index_min = np.argmin(min_list)
-            cost_mat[i+1,j+1] = dist_mat[i, j] + min_list[index_min]
-            traceback_mat[i,j] = index_min
-    i = N-1
-    j = M -1
-    path = [(i,j)]
-    while i > 0 or j > 0:
-        tb_type = traceback_mat[i,j]
-        if tb_type == 0: # đi chéo
-            i = i-1
-            j = j-1
-        elif tb_type == 1: # đi xuống
-            i = i - 1
-        elif tb_type == 2: # đi ngang
-            j = j - 1
-
-        path.append((i,j))
-    cost_mat = cost_mat[1:, 1:]
-    return path[::-1]
-
-# """GET PATH FROM DTW"""
-
-# def get_path1(path):
-#     # Create a defaultdict to group elements by their first element
-#     x = path[-1]
-#     if x[0] > x[1]:
-
-#         grouped = defaultdict(list)
-#         for element in path:
-#             grouped[element[1]].append(element)
-
-#         # Find the element e with the maximum second element for each group
-#         result = [max(group, key=lambda x: x[0]) for group in grouped.values()]
-#     else:
-#         grouped = defaultdict(list)
-#         for element in path:
-#             grouped[element[0]].append(element)
-
-#         # Find the element e with the maximum second element for each group
-#         result = [max(group, key=lambda x: x[1]) for group in grouped.values()]
-
-#     return result
-
-""" VIDEO OUTPUT OF TRAINER VIDEO"""
-def get_trainer_output_vid(trainer_point_path, learner_point_path,trainer_video_path, 
-                           trainer_output_video_path):
-    cap = cv2.VideoCapture(trainer_video_path)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(trainer_output_video_path, fourcc, 10.0, (int(cap.get(3)), int(cap.get(4))))
-
-
-    array_t = get_array(trainer_point_path)
-    array_l = get_array(learner_point_path)
+        self.trainer_data = self.read_file(file_directory_trainer)
+        self.learner_data = self.read_file(file_directory_learner)
     
-    array_l = align_poses(array_t, array_l)
+    def read_file(self, file_directory):
+        '''Read the file from the file directory and return the data.'''
+
+        data = np.load(file_directory)
+        return data
     
+    def calculate_angle(self, point1, point2, point3):
+        '''Calculate the angle between 3 points.
+        Parameters
+        ----------
+        point1, point2, point3 : list
+            The 3D- coordinates of the 3 points.
+        '''
+
+        vector1 = np.array(point1) - np.array(point2)
+        vector3 = np.array(point3) - np.array(point2)
+
+        dot_product = np.dot(vector1, vector3)
+        norm_product = np.linalg.norm(vector1) * np.linalg.norm(vector3)
+
+        cosine_angle = dot_product / norm_product
+        angle = np.arccos(cosine_angle)
+
+        return np.degrees(angle)
     
-    mat1 = extract_vid(array_t)
-    mat2 = extract_vid(array_l)
-    dist_mat = distance_matrix(mat1, mat2)
-    path_dtw = dtw(dist_mat)
-    #path_dtw = get_path1(path)
-    stop = 0
-    while cap.isOpened():
-        stop += 1
-        if stop == 2:
-            break
-        for i in path_dtw:
-            cap.set(1, i[0])  # Where frame_no is the frame you want
-            ret, frame = cap.read()
-            if ret:
-                out.write(frame)
-            else:
-                break
+    def angle_dict_fun(self):
+        angle_dict = {
+                    'right_elbow': [14,15,16], 
+                    'left_elbow': [11,12,13], 
+                    'right_shoulder': [8,14,15], 
+                    'left_shoulder': [8,11,12],
+                    'right_knee': [1,2,3], 
+                    'left_knee': [4,5,6], 
+                    'right_hip':[0,1,2], 
+                    'left_hip': [0,4,5],  
+                    'vertical': [8,0,0]
+                     }
+        return angle_dict
+    
+    def extract_vid(self, data):
+        matrix = []
+        angle_dict = self.angle_dict_fun()
+        for i in range(data.shape[0]):  #
+            theta = []
+            for key in angle_dict.keys():                  
+                if key != "vertical": 
+                    val = angle_dict[key]
+                    a = data[i][val[0]]
+                    b = data[i][val[1]]
+                    c = data[i][val[2]]
+                else:
+                    val = angle_dict[key]
+                    a = data[i][val[0]]
+                    b = data[i][val[1]]
+                    c = [0,1,0] # coordinate of vertical vector
+                angle = self.calculate_angle(a, b, c)
+                theta.append(angle)               
+            matrix.append(theta)    
+        return np.array(matrix)
+    
+    def distance_matrix(self, mat1, mat2):
+        N = mat1.shape[0]
+        M = mat2.shape[0]
+        dist_mat = np.zeros((N,M))
+        for i in range(N):
+            for j in range(M):
+                dist_mat[i, j] = np.linalg.norm(mat1[i, :] - mat2[j,:] )
+        return dist_mat
+    
+    def execute(self, verbose = True):
+        '''Execute the preprocessing and return the distance matrix.'''
+        if verbose:
+            print("Start preprocessing...")
+            start_time = time.time()
+            print('-'*50)
         
-    cap.release()
-    out.release()
+        trainer_matrix = self.extract_vid(self.trainer_data)
+        learner_matrix = self.extract_vid(self.learner_data)
+        distance_matrix = self.distance_matrix(trainer_matrix, learner_matrix)
+
+        if verbose:
+            print("Finish preprocessing!")
+            print(f"Eslaped time: {time.time() - start_time}")
+            print('-'*50)
+        return distance_matrix, trainer_matrix, learner_matrix
+    
+class Dynamic_Time_Warping:
+    '''Dynamic Time Warping class for the data.'''
+
+    def __init__(self, distance_matrix, trainer_data, learner_data):
+        '''Initialize the class with the distance matrix.'''
+
+        self.distance_matrix = distance_matrix
+        self.trainer_data = trainer_data
+        self.learner_data = learner_data
+    
+    def dynamic_time_warping_algorithm(self, dist_mat):
+        N, M = dist_mat.shape
+        cost_mat = np.zeros((N + 1, M + 1))
+        for i in range(1,N+1):
+            cost_mat[i, 0]  = np.inf
+        for j in range(1, M+1):
+            cost_mat[0, j] = np.inf
+        traceback_mat = np.zeros((N,M))
+        for i in range(N):
+            for j in range(M):
+                min_list = [cost_mat[i, j], # match = 0
+                            cost_mat[i, j+1],   #insert = 1
+                            cost_mat[i+1, j]]   # deletion = 2
+                index_min = np.argmin(min_list)
+                cost_mat[i+1,j+1] = dist_mat[i, j] + min_list[index_min]
+                traceback_mat[i,j] = index_min 
+        i = N-1
+        j = M -1
+        path = [(i,j)]
+        while i > 0 or j > 0:
+            tb_type = traceback_mat[i,j]
+            if tb_type == 0: 
+                i = i-1
+                j = j-1
+            elif tb_type == 1: 
+                i = i - 1
+            elif tb_type == 2: 
+                j = j - 1
+        
+            path.append((i,j))
+        cost_mat = cost_mat[1:, 1:]
+        return path[::-1]
+
+    def optimize_path(self, path):
+        '''Optimize the path by removing the redundant frames.'''
+        x = path[-1]
+        if x[0] > x[1]:
+            grouped = defaultdict(list)
+            for element in path:
+                grouped[element[1]].append(element)
+
+            # Find the element e with the maximum second element for each group
+            result = [max(group, key=lambda x: x[0]) for group in grouped.values()]
+        else:
+            grouped = defaultdict(list)
+            for element in path:
+                grouped[element[0]].append(element)
+
+            # Find the element e with the maximum second element for each group
+            result = [max(group, key=lambda x: x[1]) for group in grouped.values()]
+
+        return result
+    
+    def execute(self, verbose = True):
+        '''Execute the dynamic time warping and return the path.'''
+
+        if verbose:
+            print("Start dynamic time warping...")
+            start_time = time.time()
+            print('-'*50)
+
+        path = self.dynamic_time_warping_algorithm(self.distance_matrix)
+        opt_path = self.optimize_path(path)
+
+        if verbose:
+            print("Finish dynamic time warping!")
+            print(f"Eslaped time: {time.time() - start_time}")
+            print('-'*50)
+
+        return opt_path
 
 
-"""GET COORDINATE ARRAY FROM FILE.NPY"""
+class Compare:
+    '''Compare the 2 videos.'''
+    def __init__(self, path_dtw, trainer_data, learner_data, trainer_matrix, learner_matrix, output_path):
+        '''Initialize the class with the path of the dynamic time warping.'''
 
+        self.path_dtw = path_dtw
+        self.trainer_data = trainer_data
+        self.learner_data = learner_data  
+        self.trainer_matrix = trainer_matrix
+        self.learner_matrix = learner_matrix
+        self.output_path = output_path
 
-def get_array(path):
-    b = np.load(path)
-    return b
+    def return_matched_file(self, path_dtw, data, opt = 0):
+            '''Return the matched in .npy file.
+            Parameters: 
+            ----------'
+            path_dtw : list
+                The path of the dynamic time warping.
+            data : numpy array
+                The data of the video.
+            opt : int
+                0 for trainer, 1 for learner.'''
 
-"""GET WRONG LIST ANGLE + FRAME INDEX"""
+            new_data = np.array([data[0]])
+            for i in path_dtw:
+                j = i[opt] 
+                new_data = np.append(new_data,[data[j]], axis=0)
+            if opt == 0:
+                name = 'trainer'
+            else:
+                name = 'learner'
 
-
-def get_wrong_angle_dict(inpath1, inpath2, path, mat1, mat2):
-    cap1 = cv2.VideoCapture(inpath1)
-    cap2 = cv2.VideoCapture(inpath2)
-    stop = 0
-    name_angle = name_angle_fun()
-    wrong_angle_list = []
-    while cap1.isOpened() or cap2.isOpened():
-
-        stop += 1
-        if stop == 2:
-            break
-        for i in path:
+            np.save(self.output_path+name+'.npy',new_data[1:])
+        
+    def angle_dict_fun(self):
+        angle_dict = {
+                        'right_elbow': [14,15,16], 
+                        'left_elbow': [11,12,13], 
+                        'right_shoulder': [8,14,15], 
+                        'left_shoulder': [8,11,12],
+                        'right_knee': [1,2,3], 
+                        'left_knee': [4,5,6], 
+                        'right_hip':[0,1,2], 
+                        'left_hip': [0,4,5],  
+                        'vertical': [8,0,0]
+                     }
+        return angle_dict
+    
+    def name_angle_fun(self):
+        name_angle = {
+                        'right_elbow': 0, 
+                        'left_elbow': 1, 
+                        'right_shoulder': 2, 
+                        'left_shoulder': 3,
+                        'right_knee': 4, 
+                        'left_knee': 5, 
+                        'right_hip':6, 
+                        'left_hip': 7, 
+                        'vertical': 8
+                      }
+        return name_angle
+        
+    def get_wrong_angle_dict(self, path_dtw, mat1, mat2):
+        wrong_angle_list = []
+        name_angle = self.name_angle_fun()
+        for i in path_dtw:
             ang_list = []
             for key in name_angle.keys():
                 j = name_angle[key]
@@ -206,205 +253,67 @@ def get_wrong_angle_dict(inpath1, inpath2, path, mat1, mat2):
 
                 if wrong_ang >= 20:
                     ang_list.append(key)
-            wrong_angle_list.append([i[1],ang_list])
-    return dict(wrong_angle_list)
+                wrong_angle_list.append([i[1],ang_list])
+        return dict(wrong_angle_list)
+
+    def return_error_file(self,path_dtw, learner_data):
+        wrong_angle_dict = self.get_wrong_angle_dict(path_dtw, self.trainer_matrix, self.learner_matrix)
+        angle_dict = self.angle_dict_fun()
+        error_data = []
+        for i in path_dtw:
+            error_frame = [] 
+            key_list = wrong_angle_dict[i[1]]        
+            if key_list:
+                for key in key_list:
+                    j = angle_dict[key][1]
+                    error_frame.append(learner_data[i[1],j,:].tolist())
+            while len(error_frame) < 17:
+                error_frame.append([np.nan, np.nan, np.nan])           
+            error_data.append(error_frame)
+        my_3d_array = np.array(error_data).reshape((len(error_data), 17, 3))    
+        np.save(self.output_path + 'angles_error.npy',my_3d_array) 
+
+    def execute(self, verbose = True):
+        '''Execute the dynamic time warping and return the path.'''
+        if verbose:
+            print("Start comparing 2 videos...")
+            start_time = time.time()
+            print('-'*50)
+
+        self.return_matched_file(self.path_dtw, self.trainer_data, opt = 0)
+        self.return_matched_file(self.path_dtw, self.learner_data, opt = 1)
+        self.return_error_file(self.path_dtw, self.learner_data)
+
+        if verbose:
+            print("Finish comparing 2 videos!")
+            print(f"Eslaped time: {time.time() - start_time}")
+            print('-'*50)
+
+def main():
+    # Argument parser for command line execution
+    parser = argparse.ArgumentParser(description='Execute combined_overlay_function with specified exercise.')
+    parser.add_argument('--trainer_path', type=str, required=True, help='Path to the trainer data file.')
+    parser.add_argument('--learner_path', type=str, required=True, help='Path to the learner data file.')
+    parser.add_argument('--output_path', type=str, required=True, help='Path to save the output files.')
+
+    args = parser.parse_args()
+
+    trainer_path = args.trainer_path
+    learner_path = args.learner_path
+    output_path = args.output_path
+
+    distance_matrix, trainer_matrix, learner_matrix = Preprocessing(file_directory_trainer=trainer_path,
+                                                                    file_directory_learner=learner_path).execute()
+
+    trainer_data = np.load(trainer_path)
+    learner_data = np.load(learner_path)
+
+    path_dtw = Dynamic_Time_Warping(distance_matrix, trainer_data, learner_data).execute()
+
+    Compare(path_dtw, trainer_data, learner_data, trainer_matrix, learner_matrix, output_path).execute()
 
 
-# overlay on original video
-
-def draw_3d_keypoints_on_frame(frame, keypoints_3d, color_3d=(0, 255, 0)):
-    """
-    Draw 3D keypoints on a given frame.
-    """
-    for kp in keypoints_3d:
-        x_3d, y_3d, _ = kp
-        cv2.circle(frame, (int(x_3d), int(y_3d)), 3, color_3d, -1)
-    return frame
-
-def overlay_3d_on_original_video(original_video_path, keypoints_3d_path, output_video_path):
-    # Load the 3D keypoints
-    pose_3d_data = np.load(keypoints_3d_path)
-
-    # Open the original video
-    cap = cv2.VideoCapture(original_video_path)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_video_path, fourcc, 10.0, (int(cap.get(3)), int(cap.get(4))))
-
-    # Check if video writer is opened successfully
-    if not out.isOpened():
-        print("Error: Video writer could not be opened!")
-        return
-
-    frame_idx = 0
-    if not cap.isOpened():
-      print("Error: Video capture could not be opened!")
-      return
-    else:
-      print(f"Video capture opened. Total frames: {int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}")
-
-    while cap.isOpened():
-        print(f"Processing frame: {frame_idx}")
-        ret, frame = cap.read()
-        if ret:
-            if frame_idx < pose_3d_data.shape[0]:
-                keypoints_3d = pose_3d_data[frame_idx]
-                frame = draw_3d_keypoints_on_frame(frame, keypoints_3d)
-                out.write(frame)
-                frame_idx += 1
-            else:
-                print(f"Processed all keypoints. Last frame index: {frame_idx}")
-                break
-        else:
-            print(f"Video read returned False at frame index: {frame_idx}")
-            break
-
-    cap.release()
-    out.release()
-
-    print(f"Overlay completed. The output video is saved at: {output_video_path}")
-
-
-def highlight_body_part_with_circle(frame, keypoints, body_parts, circle_radius=10):
-    """
-    Highlight the specified body parts using circles around the keypoints with side-specific colors.
-    """
-    # Define the keypoints indices for various body parts
-    angle_dict = {
-        'right_elbow': [14, 15, 16],
-        'left_elbow': [11, 12, 13],
-        'right_shoulder': [8, 14, 15],
-        'left_shoulder': [8, 11, 12],
-        'right_knee': [1, 2, 3],
-        'left_knee': [4, 5, 6],
-        'right_hip': [0, 1, 2],
-        'left_hip': [0, 4, 5],
-        'vertical': [8, 0, 0]
-    }
-
-    # Colors for left and right side keypoints
-    color_dict = {
-        'left': (0, 0, 139),  # Blue for left side keypoints
-        'right': (0, 0, 255)  # Red for right side keypoints
-    }
-
-    # For each body part in the list, extract the middle keypoint and highlight it with the appropriate color
-    for body_part in body_parts:
-        middle_idx = angle_dict[body_part][1]
-        kp = keypoints[middle_idx][:2]
-
-        # Determine color based on left or right
-        if "left" in body_part:
-            color = color_dict["left"]
-        else:
-            color = color_dict["right"]
-
-        cv2.circle(frame, (int(kp[0]), int(kp[1])), circle_radius, color, -1)
-
-    return frame
-
-def combined_overlay_function(trainer_point_path, learner_point_path, trainer_video_path, learner_video_path
-                              , output_video_path):
-    # Load the 3D keypoints
-    
-    array_t = get_array(trainer_point_path)
-    array_l = get_array(learner_point_path)
-    
-    array_t = align_poses(array_l, array_t)
-    
-    mat1 = extract_vid(array_t)
-    mat2 = extract_vid(array_l)
-    dist_mat = distance_matrix(mat1, mat2)
-    path = dtw(dist_mat)
-    path_dtw = get_path1(path)
-    path_learner = [i[1] for i in path_dtw]
-    
-    #wrong_angle = get_wrong_angle_dict(trainer_video_path, learner_video_path, path_dtw, mat1, mat2)
-    
-    body_parts_to_highlight = get_wrong_angle_dict(trainer_video_path, learner_video_path, path_dtw, mat1, mat2)
-    pose_3d_data = array_l
-
-    # Open the original video
-    cap = cv2.VideoCapture(learner_video_path)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_video_path, fourcc, 10.0, (int(cap.get(3)), int(cap.get(4))))
-
-    # Check if video writer is opened successfully
-    if not out.isOpened():
-        print("Error: Video writer could not be opened!")
-        return
-
-    frame_idx = 0
-    if not cap.isOpened():
-        print("Error: Video capture could not be opened!")
-        return
-    else:
-        print(f"Video capture opened. Total frames: {int(cap.get(cv2.CAP_PROP_FRAME_COUNT))}")
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if ret:
-            if frame_idx in path_learner:
-                keypoints_3d = pose_3d_data[frame_idx]
-
-                # Draw all 3D keypoints on the frame
-                frame = draw_3d_keypoints_on_frame(frame, keypoints_3d)
-
-                # Highlight specified body parts
-                if frame_idx in body_parts_to_highlight.keys():
-                    frame = highlight_body_part_with_circle(frame, keypoints_3d, body_parts_to_highlight[frame_idx], circle_radius=15)
-
-                out.write(frame)
-                frame_idx += 1
-            else:
-                pass
-        else:
-            break
-
-    cap.release()
-    out.release()
-
-    print(f"Overlay completed. The output video is saved at: {output_video_path}")
-
-def align_poses(pose1, pose2):
-    # Calculate the average vectors for the neck to nose direction for both poses
-    avg_vector_neck_nose_pose1 = np.mean(pose1[:, 8, :] - pose1[:, 9, :], axis=0)
-    avg_vector_neck_nose_pose2 = np.mean(pose2[:, 8, :] - pose2[:, 9, :], axis=0)
-    
-    # Normalize the average vectors
-    avg_vector_neck_nose_pose1_norm = avg_vector_neck_nose_pose1 / np.linalg.norm(avg_vector_neck_nose_pose1)
-    avg_vector_neck_nose_pose2_norm = avg_vector_neck_nose_pose2 / np.linalg.norm(avg_vector_neck_nose_pose2)
-    
-    # Calculate the cross product and the angle between the average vectors
-    cross_product_avg = np.cross(avg_vector_neck_nose_pose2_norm, avg_vector_neck_nose_pose1_norm)
-    angle_avg = np.arccos(np.clip(np.dot(avg_vector_neck_nose_pose2_norm, avg_vector_neck_nose_pose1_norm), -1.0, 1.0))
-    
-    # Create the rotation vector (axis-angle representation) for the average vectors
-    rotation_vector_avg = cross_product_avg * angle_avg
-    
-    # Convert the rotation vector to a rotation matrix
-    rotation_avg = R.from_rotvec(rotation_vector_avg)
-    
-    # Apply the rotation to all points of pose 2
-    pose2_aligned_avg = np.empty_like(pose2)
-    for i in range(pose2.shape[0]):
-        pose2_aligned_avg[i] = rotation_avg.apply(pose2[i])
-    
-    
-    return pose2_aligned_avg
-
-# File paths based on the exercise argument
-EXERCISE = args.exercise
-trainer_point_path = f"/data/trainer/{EXERCISE}/X3D.npy"
-learner_point_path = f"/data/learner/{EXERCISE}/X3D.npy"
-trainer_video_path = f"/data/trainer/{EXERCISE}/{EXERCISE}.mp4"
-learner_video_path = f"/data/learner/{EXERCISE}/{EXERCISE}.mp4"
-learner_output_video_path = f"/data/learner/{EXERCISE}/output.mp4"
-trainer_output_video_path = f"/data/trainer/{EXERCISE}/output.mp4"
-
-# Call the combined function if the script is executed directly
 if __name__ == '__main__':
-    combined_overlay_function(trainer_point_path, learner_point_path,trainer_video_path, 
-                              learner_video_path, learner_output_video_path)
+    main()
 
-    get_trainer_output_vid(trainer_point_path, learner_point_path,trainer_video_path, 
-                           trainer_output_video_path)
+    
