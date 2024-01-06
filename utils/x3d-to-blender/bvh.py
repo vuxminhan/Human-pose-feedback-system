@@ -7,7 +7,7 @@ def main(input_npy, output_folder):
     # Extract base name from input file and create output BVH file name
     base_name = Path(input_npy).stem
     output_bvh = Path(output_folder) / f"{base_name}.bvh"
-
+    output_npy = Path(output_folder) / "channels1.npy"
     # Load the pose data
     pose3d_world = np.load(input_npy)
     print(f"Loaded pose data from {input_npy}")
@@ -18,6 +18,10 @@ def main(input_npy, output_folder):
 
     # Convert poses to BVH
     channels, header = h36m_skel.poses2bvh(pose3d_world, output_file=output_bvh)
+    reshaped_channels = [channels[i:i+3] for i in range(0, len(channels), 3)]
+
+    np.save(output_npy, reshaped_channels)
+    print(f"Channels data saved to {output_folder}")
     print(f"Converted to BVH and saved to {output_bvh}")
 
 if __name__ == "__main__":
