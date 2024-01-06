@@ -7,7 +7,7 @@ def main(input_npy, output_folder):
     # Extract base name from input file and create output BVH file name
     base_name = Path(input_npy).stem
     output_bvh = Path(output_folder) / f"{base_name}.bvh"
-    output_npy = Path(output_folder) / "channels1.npy"
+    output_npy = Path(output_folder) / "transformedX3D.npy"
     # Load the pose data
     pose3d_world = np.load(input_npy)
     print(f"Loaded pose data from {input_npy}")
