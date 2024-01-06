@@ -251,7 +251,7 @@ class Compare:
                 j = name_angle[key]
                 wrong_ang = abs(mat2[i[1],j] - mat1[i[0],j])
 
-                if wrong_ang >= 20:
+                if wrong_ang >= 10:
                     ang_list.append(key)
                 wrong_angle_list.append([i[1],ang_list])
         return dict(wrong_angle_list)
@@ -261,14 +261,17 @@ class Compare:
         angle_dict = self.angle_dict_fun()
         error_data = []
         for i in path_dtw:
-            error_frame = [] 
+            error_frame = [[np.nan, np.nan, np.nan]] *17 
             key_list = wrong_angle_dict[i[1]]        
             if key_list:
+                index_list = []
                 for key in key_list:
                     j = angle_dict[key][1]
-                    error_frame.append(learner_data[i[1],j,:].tolist())
-            while len(error_frame) < 17:
-                error_frame.append([np.nan, np.nan, np.nan])           
+                    index_list.append(j)
+                for k in range(1,17):
+                    if k not in index_list:
+                        learner_data[i[1],k] = [np.nan, np.nan, np.nan]
+                        error_frame = learner_data[i[1]].tolist()
             error_data.append(error_frame)
         my_3d_array = np.array(error_data).reshape((len(error_data), 17, 3))    
         np.save(self.output_path + 'angles_error.npy',my_3d_array) 
@@ -315,5 +318,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-    
