@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import time
 from collections import defaultdict
+import json
 
 class Preprocessing:
     '''Preprocessing video...'''
@@ -182,7 +183,7 @@ class Dynamic_Time_Warping:
 
 class Compare:
     '''Compare the 2 videos.'''
-    def __init__(self, path_dtw, trainer_data, learner_data, trainer_matrix, learner_matrix, output_path):
+    def __init__(self, path_dtw, trainer_data, learner_data, trainer_matrix, learner_matrix, output_path, angle_threshold):
         '''Initialize the class with the path of the dynamic time warping.'''
 
         self.path_dtw = path_dtw
@@ -191,6 +192,7 @@ class Compare:
         self.trainer_matrix = trainer_matrix
         self.learner_matrix = learner_matrix
         self.output_path = output_path
+        self.angle_threshold = angle_threshold
 
     def return_matched_file(self, path_dtw, data, opt = 0):
             '''Return the matched in .npy file.
@@ -216,33 +218,33 @@ class Compare:
         
     def angle_dict_fun(self):
         angle_dict = {
-                        'right_elbow': [14,15,16], 
-                        'left_elbow': [11,12,13], 
-                        'right_shoulder': [8,14,15], 
-                        'left_shoulder': [8,11,12],
-                        'right_knee': [1,2,3], 
-                        'left_knee': [4,5,6], 
-                        'right_hip':[0,1,2], 
-                        'left_hip': [0,4,5],  
-                        'vertical': [8,0,0]
+                        'RightElbow': [14,15,16], 
+                        'LeftElbow': [11,12,13], 
+                        'RightShoulder': [8,14,15], 
+                        'LeftShoulder': [8,11,12],
+                        'RightKnee': [1,2,3], 
+                        'LeftKnee': [4,5,6], 
+                        'RightHip':[0,1,2], 
+                        'LeftHip': [0,4,5],  
+                        'Vertical': [8,0,0]
                      }
         return angle_dict
     
     def name_angle_fun(self):
         name_angle = {
-                        'right_elbow': 0, 
-                        'left_elbow': 1, 
-                        'right_shoulder': 2, 
-                        'left_shoulder': 3,
-                        'right_knee': 4, 
-                        'left_knee': 5, 
-                        'right_hip':6, 
-                        'left_hip': 7, 
-                        'vertical': 8
+                        'RightElbow': 0, 
+                        'LeftElbow': 1, 
+                        'RightShoulder': 2, 
+                        'LeftShoulder': 3,
+                        'RightKnee': 4, 
+                        'LeftKnee': 5, 
+                        'RightHip':6, 
+                        'LeftHip': 7, 
+                        'Vertical': 8
                       }
         return name_angle
         
-    def get_wrong_angle_dict(self, path_dtw, mat1, mat2):
+    def get_wrong_angle_list(self, path_dtw, mat1, mat2):
         wrong_angle_list = []
         name_angle = self.name_angle_fun()
         for i in path_dtw:
@@ -251,30 +253,12 @@ class Compare:
                 j = name_angle[key]
                 wrong_ang = abs(mat2[i[1],j] - mat1[i[0],j])
 
-                if wrong_ang >= 10:
+                if wrong_ang >= self.angle_threshold:
                     ang_list.append(key)
-                wrong_angle_list.append([i[1],ang_list])
-        return dict(wrong_angle_list)
+            wrong_angle_list.append(ang_list)
 
-    def return_error_file(self,path_dtw, learner_data):
-        wrong_angle_dict = self.get_wrong_angle_dict(path_dtw, self.trainer_matrix, self.learner_matrix)
-        angle_dict = self.angle_dict_fun()
-        error_data = []
-        for i in path_dtw:
-            error_frame = [[np.nan, np.nan, np.nan]] *17 
-            key_list = wrong_angle_dict[i[1]]        
-            if key_list:
-                index_list = []
-                for key in key_list:
-                    j = angle_dict[key][1]
-                    index_list.append(j)
-                for k in range(1,17):
-                    if k not in index_list:
-                        learner_data[i[1],k] = [np.nan, np.nan, np.nan]
-                        error_frame = learner_data[i[1]].tolist()
-            error_data.append(error_frame)
-        my_3d_array = np.array(error_data).reshape((len(error_data), 17, 3))    
-        np.save(self.output_path + 'angles_error.npy',my_3d_array) 
+        with open( self.output_path + 'name_error_angles.json', 'w') as file:
+                json.dump(wrong_angle_list, file)         
 
     def execute(self, verbose = True):
         '''Execute the dynamic time warping and return the path.'''
@@ -285,7 +269,7 @@ class Compare:
 
         self.return_matched_file(self.path_dtw, self.trainer_data, opt = 0)
         self.return_matched_file(self.path_dtw, self.learner_data, opt = 1)
-        self.return_error_file(self.path_dtw, self.learner_data)
+        self.get_wrong_angle_list(self.path_dtw, self.trainer_matrix, self.learner_matrix)
 
         if verbose:
             print("Finish comparing 2 videos!")
@@ -298,12 +282,15 @@ def main():
     parser.add_argument('--trainer_path', type=str, required=True, help='Path to the trainer data file.')
     parser.add_argument('--learner_path', type=str, required=True, help='Path to the learner data file.')
     parser.add_argument('--output_path', type=str, required=True, help='Path to save the output files.')
+    parser.add_argument('--angle_threshold', type=float, required=True, help='Angle difference in degree to be considered an error')
+    parser.add_argument('--clip_len', type=int, default=243, help='clip length for network input')
 
     args = parser.parse_args()
 
     trainer_path = args.trainer_path
     learner_path = args.learner_path
     output_path = args.output_path
+    angle_threshold = args.angle_threshold
 
     distance_matrix, trainer_matrix, learner_matrix = Preprocessing(file_directory_trainer=trainer_path,
                                                                     file_directory_learner=learner_path).execute()
@@ -313,8 +300,10 @@ def main():
 
     path_dtw = Dynamic_Time_Warping(distance_matrix, trainer_data, learner_data).execute()
 
-    Compare(path_dtw, trainer_data, learner_data, trainer_matrix, learner_matrix, output_path).execute()
+    Compare(path_dtw, trainer_data, learner_data, trainer_matrix, learner_matrix, output_path, angle_threshold).execute()
 
 
 if __name__ == '__main__':
     main()
+
+    
