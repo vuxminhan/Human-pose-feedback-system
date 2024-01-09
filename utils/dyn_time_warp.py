@@ -57,17 +57,13 @@ class Preprocessing:
         angle_dict = self.angle_dict_fun()
         for i in range(data.shape[0]):  #
             theta = []
-            for key in angle_dict.keys():                  
-                if key != "vertical": 
-                    val = angle_dict[key]
-                    a = data[i][val[0]]
-                    b = data[i][val[1]]
-                    c = data[i][val[2]]
-                else:
-                    val = angle_dict[key]
-                    a = data[i][val[0]]
-                    b = data[i][val[1]]
-                    c = [0,1,0] # coordinate of vertical vector
+            for key in angle_dict.keys():             
+                # coordinate of 3 points     
+                val = angle_dict[key]
+                a = data[i][val[0]]
+                b = data[i][val[1]]
+                c = data[i][val[2]]
+
                 angle = self.calculate_angle(a, b, c)
                 theta.append(angle)               
             matrix.append(theta)    
@@ -226,7 +222,6 @@ class Compare:
                         'LeftKnee': [4,5,6], 
                         'RightHip':[0,1,2], 
                         'LeftHip': [0,4,5],  
-                        'Vertical': [8,0,0]
                      }
         return angle_dict
     
@@ -240,7 +235,6 @@ class Compare:
                         'LeftKnee': 5, 
                         'RightHip':6, 
                         'LeftHip': 7, 
-                        'Vertical': 8
                       }
         return name_angle
         
@@ -282,8 +276,7 @@ def main():
     parser.add_argument('--trainer_path', type=str, required=True, help='Path to the trainer data file.')
     parser.add_argument('--learner_path', type=str, required=True, help='Path to the learner data file.')
     parser.add_argument('--output_path', type=str, required=True, help='Path to save the output files.')
-    parser.add_argument('--angle_threshold', type=float, required=True, help='Angle difference in degree to be considered an error')
-    parser.add_argument('--clip_len', type=int, default=243, help='clip length for network input')
+    parser.add_argument('--angle_threshold', type=float, default=15, help='Angle difference in degree to be considered an error')
 
     args = parser.parse_args()
 
