@@ -1,6 +1,6 @@
 import bpy
 import json
-
+# Change to correct path
 bpy.ops.import_anim.bvh(filepath="trainer-5.bvh")
 bpy.ops.import_anim.bvh(filepath="learner-5.bvh")
 bpy.ops.import_anim.bvh(filepath="learner-5.bvh")
@@ -13,7 +13,7 @@ if bpy.context.object.type == 'ARMATURE':
     
     action = armature.animation_data.action if armature.animation_data else None
     
-  if action:
+    if action:
         # Get the start and end frames of the animation
         start_frame = int(action.frame_range[0])
         end_frame = int(action.frame_range[1])
