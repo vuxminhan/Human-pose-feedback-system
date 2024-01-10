@@ -57,13 +57,17 @@ class Preprocessing:
         angle_dict = self.angle_dict_fun()
         for i in range(data.shape[0]):  #
             theta = []
-            for key in angle_dict.keys():             
-                # coordinate of 3 points     
-                val = angle_dict[key]
-                a = data[i][val[0]]
-                b = data[i][val[1]]
-                c = data[i][val[2]]
-
+            for key in angle_dict.keys():                  
+                if key != "vertical": 
+                    val = angle_dict[key]
+                    a = data[i][val[0]]
+                    b = data[i][val[1]]
+                    c = data[i][val[2]]
+                else:
+                    val = angle_dict[key]
+                    a = data[i][val[0]]
+                    b = data[i][val[1]]
+                    c = [0,1,0] # coordinate of vertical vector
                 angle = self.calculate_angle(a, b, c)
                 theta.append(angle)               
             matrix.append(theta)    
@@ -222,6 +226,7 @@ class Compare:
                         'LeftKnee': [4,5,6], 
                         'RightHip':[0,1,2], 
                         'LeftHip': [0,4,5],  
+                        'Vertical': [8,0,0]
                      }
         return angle_dict
     
@@ -235,6 +240,7 @@ class Compare:
                         'LeftKnee': 5, 
                         'RightHip':6, 
                         'LeftHip': 7, 
+                        'Vertical': 8
                       }
         return name_angle
         
@@ -250,9 +256,31 @@ class Compare:
                 if wrong_ang >= self.angle_threshold:
                     ang_list.append(key)
             wrong_angle_list.append(ang_list)
+        return wrong_angle_list
 
+    def return_error_file(self,path_dtw, learner_data):
+        name_error_angles = self.get_wrong_angle_list(path_dtw, self.trainer_matrix, self.learner_matrix)
+        angle_dict = self.angle_dict_fun()
+        error_data = []
+        index = 0
+        for i in path_dtw:
+            error_frame = [[np.nan, np.nan, np.nan]] *17 
+            key_list = name_error_angles[index]       
+            if key_list:
+                index_list = []
+                for key in key_list:
+                    j = angle_dict[key][1]
+                    index_list.append(j)
+                for k in range(1,17):
+                    if k not in index_list:
+                        learner_data[i[1],k] = [np.nan, np.nan, np.nan]
+                        error_frame = learner_data[i[1]].tolist()
+            error_data.append(error_frame)
+            index += 1
+        my_3d_array = np.array(error_data).reshape((len(error_data), 17, 3))    
+        np.save(self.output_path + 'angles_error.npy',my_3d_array)
         with open( self.output_path + 'name_error_angles.json', 'w') as file:
-                json.dump(wrong_angle_list, file)         
+                json.dump(name_error_angles, file) 
 
     def execute(self, verbose = True):
         '''Execute the dynamic time warping and return the path.'''
@@ -263,7 +291,7 @@ class Compare:
 
         self.return_matched_file(self.path_dtw, self.trainer_data, opt = 0)
         self.return_matched_file(self.path_dtw, self.learner_data, opt = 1)
-        self.get_wrong_angle_list(self.path_dtw, self.trainer_matrix, self.learner_matrix)
+        self.return_error_file(self.path_dtw, self.learner_data)
 
         if verbose:
             print("Finish comparing 2 videos!")
@@ -276,7 +304,7 @@ def main():
     parser.add_argument('--trainer_path', type=str, required=True, help='Path to the trainer data file.')
     parser.add_argument('--learner_path', type=str, required=True, help='Path to the learner data file.')
     parser.add_argument('--output_path', type=str, required=True, help='Path to save the output files.')
-    parser.add_argument('--angle_threshold', type=float, default=15, help='Angle difference in degree to be considered an error')
+    parser.add_argument('--angle_threshold', type=float, required=True, help='Angle difference in degree to be considered an error')
 
     args = parser.parse_args()
 
