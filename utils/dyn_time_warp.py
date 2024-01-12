@@ -47,7 +47,8 @@ class Preprocessing:
                         'RightKnee': [1,2,3], 
                         'LeftKnee': [4,5,6], 
                         'RightHip':[0,1,2], 
-                        'LeftHip': [0,4,5]
+                        'LeftHip': [0,4,5],
+                        'Spine': [8,0,0]
                      }
         return angle_dict
     
@@ -58,11 +59,16 @@ class Preprocessing:
             theta = []
             for key in angle_dict.keys():             
                 # coordinate of 3 points     
-                val = angle_dict[key]
-                a = data[i][val[0]]
-                b = data[i][val[1]]
-                c = data[i][val[2]]
-
+                if key != "Spine": 
+                    val = angle_dict[key]
+                    a = data[i][val[0]]
+                    b = data[i][val[1]]
+                    c = data[i][val[2]]
+                else:
+                    val = angle_dict[key]
+                    a = data[i][val[0]]
+                    b = data[i][val[1]]
+                    c = [0,1,0] # coordinate of vertical vector
                 angle = self.calculate_angle(a, b, c)
                 theta.append(angle)               
             matrix.append(theta)    
@@ -220,7 +226,8 @@ class Compare:
                         'RightKnee': [1,2,3], 
                         'LeftKnee': [4,5,6], 
                         'RightHip':[0,1,2], 
-                        'LeftHip': [0,4,5]
+                        'LeftHip': [0,4,5],
+                        'Spine': [8,0,0]
                      }
         return angle_dict
     
@@ -233,7 +240,8 @@ class Compare:
                         'RightKnee': 4, 
                         'LeftKnee': 5, 
                         'RightHip':6, 
-                        'LeftHip': 7
+                        'LeftHip': 7,
+                        'Spine':8
                       }
         return name_angle
         
