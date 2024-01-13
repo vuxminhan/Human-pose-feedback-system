@@ -1,4 +1,4 @@
-![taek](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/27729a50-4afb-4c73-b46f-b3411be1d5db)# "MotionMentor: 'Learn by Doing' with 3D Human Pose Estimation and Dynamic Time Warping for Accurate Pose Comparison in Fitness"
+# "MotionMentor: 'Learn by Doing' with 3D Human Pose Estimation and Dynamic Time Warping for Accurate Pose Comparison in Fitness"
 ## Installation 
 ## Application 
 ## Related work 
