@@ -2,7 +2,7 @@
 ## Result 
 The Human Pose Feedback System application is versatile and can be adapted for various types of workouts, including martial arts, hypertrophy training, and dance choreography. 
    
-   ![vovinam (3)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/1e108d34-d839-43bd-a531-5fdb62de6464)
+
 
 1. **Hypertrophy Training**: For bodybuilding and strength training, the system can monitor and correct form during exercises. This aids in targeting specific muscle groups effectively and reducing the risk of injury.
    ### Air squat
@@ -22,6 +22,7 @@ The Human Pose Feedback System application is versatile and can be adapted for v
    ![taek (3)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/dfa72be4-1a14-4060-afc7-29ea009fa516)
 
    ### Vovinam
+   ![vovinam (3)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/1e108d34-d839-43bd-a531-5fdb62de6464)
 ## Installation
 
 ```bash
