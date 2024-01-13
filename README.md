@@ -5,9 +5,8 @@
 ## Result 
 The Human Pose Feedback System application is versatile and can be adapted for various types of workouts, including martial arts, hypertrophy training, and dance choreography. 
 
-1. **Martial Arts**: The application can analyze and provide feedback on posture, alignment, and movement precision crucial in martial arts. It helps in refining stances, kicks, and strikes through detailed pose analysis.
+1. **Martial Arts**: The application can analyze and provide feedback on posture, alignment, and movement precision crucial in martial arts. It helps in refining stances, kicks, and strikes through detailed pose analysis.\n
    Taekwondon
-   
 
    Vovinam
    
