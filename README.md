@@ -4,10 +4,13 @@ The Human Pose Feedback System application is versatile and can be adapted for v
 
 1. **Martial Arts**: The application can analyze and provide feedback on posture, alignment, and movement precision crucial in martial arts. It helps in refining stances, kicks, and strikes through detailed pose analysis. <br>
    ### Taekwondon <br>
-   ![taek](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/52cc132e-8d50-4c1e-a9de-79ff95cac5b3)
+
+   ![taek (2)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/83ede9c0-ff13-480d-8ca8-61cc6a6aa7b7)
 
    ### Vovinam
-   
+
+   ![vovinam (2)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/fb26c796-2f22-4973-ae35-fa12e607c85b)
+
    
 2. **Hypertrophy Training**: For bodybuilding and strength training, the system can monitor and correct form during exercises. This aids in targeting specific muscle groups effectively and reducing the risk of injury.
    ### Air squat
@@ -18,6 +21,10 @@ The Human Pose Feedback System application is versatile and can be adapted for v
 
 4. **Dance Choreography**: The application offers valuable insights into posture and movement fluidity, essential for dancers. It can be used to refine and synchronize complex choreographic sequences, ensuring each movement is executed with precision.
 
+   ### Kpop dance
+
+   ![kpop_dance](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/2bfc75da-9ccf-42e1-a8b8-d99e8208557b)
+   
 ## Installation
 
 ```bash
