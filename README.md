@@ -11,6 +11,7 @@ The Human Pose Feedback System application is versatile and can be adapted for v
    Vovinam
    
 3. **Hypertrophy Training**: For bodybuilding and strength training, the system can monitor and correct form during exercises. This aids in targeting specific muscle groups effectively and reducing the risk of injury.
+   ![Air squat](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/187ae504-44b3-458c-a033-99c5bd4bd971)
 
 4. **Dance Choreography**: The application offers valuable insights into posture and movement fluidity, essential for dancers. It can be used to refine and synchronize complex choreographic sequences, ensuring each movement is executed with precision.
 
