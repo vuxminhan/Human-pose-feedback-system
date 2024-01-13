@@ -1,7 +1,4 @@
 # "MotionMentor: 'Learn by Doing' with 3D Human Pose Estimation and Dynamic Time Warping for Accurate Pose Comparison in Fitness"
-## Installation 
-## Application 
-## Related work 
 ## Result 
 The Human Pose Feedback System application is versatile and can be adapted for various types of workouts, including martial arts, hypertrophy training, and dance choreography. 
 
@@ -21,5 +18,22 @@ The Human Pose Feedback System application is versatile and can be adapted for v
 
 4. **Dance Choreography**: The application offers valuable insights into posture and movement fluidity, essential for dancers. It can be used to refine and synchronize complex choreographic sequences, ensuring each movement is executed with precision.
 
+## Installation
 
-## Citation 
+```bash
+conda create -n pose-feedback python=3.7 anaconda
+conda activate pose-feedback
+# Please install PyTorch according to your CUDA version.
+conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+pip install -r requirements.txt
+```
+
+
+## Applications
+
+### In-the-wild inference (for custom videos)
+
+Please refer to [infer_wild.ipynb](infer_wild.ipynb).
+
+
+
