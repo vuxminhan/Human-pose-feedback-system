@@ -68,7 +68,7 @@ class Preprocessing:
                     val = angle_dict[key]
                     a = data[i][val[0]]
                     b = data[i][val[1]]
-                    c = [0,1,0] # coordinate of vertical vector
+                    c = [data[i][val[1]][0],1,data[i][val[1]][2]] # coordinate of a point on the vertical line
                 angle = self.calculate_angle(a, b, c)
                 theta.append(angle)               
             matrix.append(theta)    
