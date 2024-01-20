@@ -5,24 +5,29 @@ The Human Pose Feedback System application is versatile and can be adapted for v
 
 
 1. **Hypertrophy Training**: For bodybuilding and strength training, the system can monitor and correct form during exercises. This aids in targeting specific muscle groups effectively and reducing the risk of injury.
-   ### Air squat
-   ![Air squat](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/187ae504-44b3-458c-a033-99c5bd4bd971)
-
-   ### Front squat
-   ![front_squat](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/84e177a9-b9b7-4c33-82da-49cb204650be)
-
-2. **Dance Choreography**: The application offers valuable insights into posture and movement fluidity, even for fast-moving subjects like dancers. It can be used to refine and synchronize complex choreographic sequences, ensuring each movement is executed with precision.
-
-   ### Kpop dance
+   ### Air squat <br>
    
-   ![dance](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/2af503e9-6ac2-4034-b063-da1900efdae4)
+   ![air_squat_gif](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/e83491cd-d867-4499-8a18-4766f919be35)
+
+   ### Front squat <br>
+   
+   ![front_squat_gif](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/6c39a679-19bb-4bec-bd66-a35375d4108c)
+
+3. **Dance Choreography**: The application offers valuable insights into posture and movement fluidity, even for fast-moving subjects like dancers. It can be used to refine and synchronize complex choreographic sequences, ensuring each movement is executed with precision.
+
+   ### Kpop dance <br>
+   
+   ![dance_gif](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/4b3e6c12-9f8b-4edd-be8d-a2014d1397b2)
+   
 3. **Martial Arts**: The application can analyze and provide visual feedback on posture, alignment, and movement precision crucial in martial arts. It helps in refining stances, kicks, and strikes through detailed pose analysis. <br>
    ### Taekwondon <br>
 
-   ![taek (3)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/dfa72be4-1a14-4060-afc7-29ea009fa516)
+   ![taek_gif](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/73146a73-75cc-4ca4-9090-6b60926676a3)
 
-   ### Vovinam
-   ![vovinam (3)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/1e108d34-d839-43bd-a531-5fdb62de6464)
+   ### Vovinam <br>
+   
+   ![vovinam_gif (2)](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/881217ca-f8ee-4951-891c-db0a4601e990)
+
 ## Installation
 
 ```bash
