@@ -43,7 +43,7 @@ pip install -r requirements.txt
 
 ### In-the-wild inference (for custom videos)
 
-Please refer to [infer_wild.ipynb](infer_wild.ipynb).
+Please refer to [infer_wild.ipynb](infer_wild.ipynb).or [colab](https://colab.research.google.com/github/vuxminhan/Human-pose-feedback-system/blob/main/infer_wild.ipynb)
 
 
 
