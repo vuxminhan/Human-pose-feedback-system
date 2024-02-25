@@ -20,7 +20,7 @@ The Human Pose Feedback System application is versatile and can be adapted for v
    ![dance_gif](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/4b3e6c12-9f8b-4edd-be8d-a2014d1397b2)
    
 3. **Martial Arts**: The application can analyze and provide visual feedback on posture, alignment, and movement precision crucial in martial arts. It helps in refining stances, kicks, and strikes through detailed pose analysis. <br>
-   ### Taekwondon <br>
+   ### Taekwondo <br>
 
    ![taek_gif](https://github.com/vuxminhan/Human-pose-feedback-system/assets/54212949/73146a73-75cc-4ca4-9090-6b60926676a3)
 
